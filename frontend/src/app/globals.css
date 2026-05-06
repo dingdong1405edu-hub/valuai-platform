@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --navy: #1a3a5c;
+    --brand-blue: #2e86ab;
+    --brand-accent: #e84855;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-slate-50 text-navy-800;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white shadow-sm border border-navy-100;
+  }
+
+  .input-base {
+    @apply block w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5
+           text-sm text-navy-800 placeholder-navy-400
+           focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent
+           disabled:bg-navy-50 disabled:cursor-not-allowed
+           transition-shadow;
+  }
+
+  .label-base {
+    @apply block text-sm font-medium text-navy-700 mb-1.5;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

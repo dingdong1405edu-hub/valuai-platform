@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Báo cáo Định giá Doanh nghiệp{% if report.company_profile %} – {{ report.company_profile.company_name }}{% endif %}</title>
+<style>
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --navy:       #1a3a5c;
+  --blue:       #2e86ab;
+  --light-blue: #a8dadc;
+  --accent:     #e84855;
+  --accent-bg:  #fff0f1;
+  --green:      #2a9d8f;
+  --green-bg:   #eafaf7;
+  --orange:     #e9820c;
+  --orange-bg:  #fff4e5;
+  --gray:       #f4f4f4;
+  --gray-mid:   #e0e0e0;
+  --text:       #222222;
+  --text-light: #555555;
+  --white:      #ffffff;
+  --shadow:     0 2px 8px rgba(26,58,92,0.10);
+}
+
+/* ── Reset & Base ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 10pt; }
+body {
+  font-family: "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+  color: var(--text);
+  background: var(--white);
+  line-height: 1.55;
+}
+
+/* ── Print & Page ───────────────────────────────────────────── */
+@media print {
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+}
+@page {
+  size: A4;
+  margin: 2cm 1.8cm;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-size: 8pt;
+    color: var(--text-light);
+  }
+}
+
+/* ── Page breaks ────────────────────────────────────────────── */
+.page-break-before { page-break-before: always; break-before: page; }
+.avoid-break       { page-break-inside: avoid; break-inside: avoid; }
+
+/* ── Cover Page ─────────────────────────────────────────────── */
+.cover-page {
+  page-break-after: always;
+  break-after: page;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, var(--navy) 0%, #2a5a8c 55%, var(--blue) 100%);
+  color: var(--white);
+  padding: 0;
+}
+.cover-top-bar {
+  background: rgba(255,255,255,0.08);
+  padding: 18px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.cover-logo-placeholder {
+  width: 54px; height: 54px;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9pt; color: rgba(255,255,255,0.6);
+  font-style: italic;
+}
+.cover-firm-name {
+  font-size: 10pt; letter-spacing: 0.08em; color: rgba(255,255,255,0.75);
+  text-transform: uppercase;
+}
+.cover-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 64px 40px;
+  text-align: center;
+}
+.cover-tag {
+  display: inline-block;
+  background: rgba(168,218,220,0.25);
+  border: 1px solid var(--light-blue);
+  color: var(--light-blue);
+  border-radius: 20px;
+  padding: 4px 18px;
+  font-size: 8.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.cover-company-name {
+  font-size: 30pt;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.18;
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+.cover-report-title {
+  font-size: 13pt;
+  color: var(--light-blue);
+  margin-bottom: 40px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+.cover-divider {
+  width: 72px; height: 3px;
+  background: var(--light-blue);
+  border-radius: 2px;
+  margin: 0 auto 36px;
+}
+.cover-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 48px;
+}
+.cover-meta-item {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 12px 10px;
+}
+.cover-meta-label { font-size: 7.5pt; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+.cover-meta-value { font-size: 9.5pt; font-weight: 600; color: var(--white); }
+.cover-footer {
+  background: rgba(0,0,0,0.18);
+  padding: 14px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8pt;
+  color: rgba(255,255,255,0.55);
+}
+.cover-confidential {
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 7.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── TOC ────────────────────────────────────────────────────── */
+.toc-page {
+  page-break-after: always;
+  break-after: page;
+  padding: 30px 0;
+}
+.toc-title {
+  font-size: 16pt;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+.toc-subtitle { font-size: 9pt; color: var(--text-light); margin-bottom: 28px; }
+.toc-list { list-style: none; }
+.toc-list li {
+  display: flex;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px dotted var(--gray-mid);
+  font-size: 9.5pt;
+}
+.toc-list li:last-child { border-bottom: none; }
+.toc-num {
+  min-width: 32px;
+  font-weight: 700;
+  color: var(--blue);
+}
+.toc-item-name { flex: 1; color: var(--text); }
+.toc-dots { flex: 1; border-bottom: 1px dotted var(--gray-mid); margin: 0 6px; }
+
+/* ── Section headers ────────────────────────────────────────── */
+.section {
+  padding-top: 6px;
+  margin-bottom: 32px;
+}
+.section-header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 18px 10px 14px;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.section-num {
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9pt; font-weight: 700;
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: 12pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.section-body {
+  border: 1px solid var(--gray-mid);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  padding: 20px 18px;
+  background: var(--white);
+}
+
+.subsection-title {
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: var(--navy);
+  border-left: 4px solid var(--blue);
+  padding-left: 10px;
+  margin: 20px 0 12px;
+}
+.subsection-title:first-child { margin-top: 0; }
+
+/* ── Tables ─────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.5pt;
+  margin-bottom: 14px;
+}
+thead tr { background: var(--navy); color: var(--white); }
+thead th {
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+thead th.right { text-align: right; }
+tbody tr:nth-child(even) { background: var(--gray); }
+tbody tr:hover { background: #e8f4fa; }
+tbody td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--gray-mid);
+  vertical-align: top;
+}
+tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
+tbody td.center { text-align: center; }
+tfoot tr { background: #e8f0f8; font-weight: 700; }
+tfoot td { padding: 8px 10px; border-top: 2px solid var(--navy); }
+
+/* ── Metric cards ────────────────────────────────────────────── */
+.metric-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.metric-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.metric-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.metric-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+.metric-card {
+  background: var(--gray);
+  border: 1px solid var(--gray-mid);
+  border-radius: 6px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.metric-card.navy { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.metric-card.blue { background: var(--blue); color: var(--white); border-color: var(--blue); }
+.metric-card.accent { background: var(--accent-bg); border-color: var(--accent); }
+.metric-label { font-size: 7.5pt; color: var(--text-light); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.metric-card.navy .metric-label,
+.metric-card.blue .metric-label { color: rgba(255,255,255,0.7); }
+.metric-value { font-size: 15pt; font-weight: 700; color: var(--navy); line-height: 1.1; }
+.metric-card.navy .metric-value,
+.metric-card.blue .metric-value { color: var(--white); }
+.metric-unit { font-size: 8pt; color: var(--text-light); margin-top: 3px; }
+.metric-card.navy .metric-unit,
+.metric-card.blue .metric-unit { color: rgba(255,255,255,0.65); }
+
+/* ── Badges ──────────────────────────────────────────────────── */
+.badge-high   { background: #fde8ea; color: #c0202d; border: 1px solid #f5b5ba; border-radius: 12px; padding: 2px 9px; font-size: 7.5pt; font-weight: 600; white-space: nowrap; }
+.badge-medium { background: #fff3e0; color: #b36000; border: 1px solid #ffd599; border-radius: 12px; padding: 2px 9px; font-size: 7.5pt; font-weight: 600; white-space: nowrap; }
+.badge-low    { background: #e6f4f1; color: #1a7a6e; border: 1px solid #99d9cf; border-radius: 12px; padding: 2px 9px; font-size: 7.5pt; font-weight: 600; white-space: nowrap; }
+.badge-buy    { background: #e6f4f1; color: #1a7a6e; border: 1px solid #99d9cf; border-radius: 14px; padding: 4px 16px; font-size: 10pt; font-weight: 700; }
+.badge-hold   { background: #fff3e0; color: #b36000; border: 1px solid #ffd599; border-radius: 14px; padding: 4px 16px; font-size: 10pt; font-weight: 700; }
+.badge-sell   { background: #fde8ea; color: #c0202d; border: 1px solid #f5b5ba; border-radius: 14px; padding: 4px 16px; font-size: 10pt; font-weight: 700; }
+
+/* ── Recommendation box ─────────────────────────────────────── */
+.rec-box {
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.rec-box.positive { background: var(--green-bg); border: 2px solid var(--green); }
+.rec-box.negative { background: var(--accent-bg); border: 2px solid var(--accent); }
+.rec-box.neutral  { background: var(--orange-bg); border: 2px solid var(--orange); }
+.rec-icon { font-size: 28pt; }
+.rec-body { flex: 1; }
+.rec-label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); margin-bottom: 4px; }
+.rec-main { font-size: 16pt; font-weight: 700; color: var(--navy); }
+.rec-sub  { font-size: 9pt; color: var(--text-light); margin-top: 4px; }
+
+/* ── Valuation range banner ─────────────────────────────────── */
+.val-range-bar {
+  background: linear-gradient(90deg, var(--green-bg), var(--white), var(--accent-bg));
+  border: 1px solid var(--gray-mid);
+  border-radius: 8px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.val-range-item { text-align: center; }
+.val-range-label { font-size: 8pt; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.val-range-num { font-size: 14pt; font-weight: 700; }
+.val-range-num.low  { color: var(--green); }
+.val-range-num.mid  { color: var(--navy);  font-size: 18pt; }
+.val-range-num.high { color: var(--accent); }
+.val-range-arrow { font-size: 18pt; color: var(--gray-mid); }
+
+/* ── Value chain ─────────────────────────────────────────────── */
+.value-chain {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid var(--gray-mid);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.vc-box {
+  padding: 14px 12px;
+  border-right: 1px solid var(--gray-mid);
+  position: relative;
+}
+.vc-box:last-child { border-right: none; }
+.vc-box:nth-child(odd)  { background: var(--gray); }
+.vc-box:nth-child(even) { background: #ebf5fa; }
+.vc-label {
+  font-size: 7.5pt;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 6px;
+  border-bottom: 2px solid var(--blue);
+  padding-bottom: 4px;
+}
+.vc-content { font-size: 8.5pt; color: var(--text); line-height: 1.5; }
+
+/* ── TAM/SAM/SOM ─────────────────────────────────────────────── */
+.tsm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.tsm-card {
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid transparent;
+}
+.tsm-card.tam { background: var(--navy); color: var(--white); }
+.tsm-card.sam { background: var(--blue); color: var(--white); }
+.tsm-card.som { background: var(--light-blue); color: var(--navy); }
+.tsm-acronym { font-size: 18pt; font-weight: 700; letter-spacing: 0.05em; }
+.tsm-full    { font-size: 8pt; opacity: 0.8; margin-bottom: 10px; }
+.tsm-value   { font-size: 14pt; font-weight: 700; }
+.tsm-unit    { font-size: 8pt; opacity: 0.7; margin-top: 2px; }
+
+/* ── Executive cards ─────────────────────────────────────────── */
+.exec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.exec-card {
+  background: var(--gray);
+  border: 1px solid var(--gray-mid);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.exec-avatar {
+  width: 38px; height: 38px;
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12pt; font-weight: 700;
+  flex-shrink: 0;
+}
+.exec-name  { font-weight: 700; font-size: 9.5pt; color: var(--navy); }
+.exec-title { font-size: 8pt; color: var(--text-light); margin-bottom: 4px; }
+.exec-bg    { font-size: 8.5pt; color: var(--text); line-height: 1.5; }
+
+/* ── Key drivers / bullet list ───────────────────────────────── */
+.driver-list { list-style: none; margin-bottom: 14px; }
+.driver-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 5px;
+  margin-bottom: 6px;
+  background: var(--gray);
+  font-size: 9pt;
+  line-height: 1.5;
+}
+.driver-list li .icon {
+  font-size: 11pt;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Fair value big box ──────────────────────────────────────── */
+.fair-value-box {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 28px 32px;
+  text-align: center;
+  margin-bottom: 22px;
+}
+.fair-value-label { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.12em; color: var(--light-blue); margin-bottom: 8px; }
+.fair-value-num   { font-size: 32pt; font-weight: 700; color: var(--white); line-height: 1; margin-bottom: 6px; }
+.fair-value-unit  { font-size: 11pt; color: rgba(255,255,255,0.7); }
+
+/* ── Upside/downside ─────────────────────────────────────────── */
+.upside-positive { color: var(--green);  font-weight: 700; }
+.upside-negative { color: var(--accent); font-weight: 700; }
+
+/* ── Note / info box ─────────────────────────────────────────── */
+.note-box {
+  background: #fffbe6;
+  border-left: 4px solid #f5c842;
+  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  font-size: 8.5pt;
+  color: #5a4500;
+  margin-bottom: 12px;
+}
+.info-box {
+  background: #eaf6ff;
+  border-left: 4px solid var(--blue);
+  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  font-size: 8.5pt;
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+.na-box {
+  background: var(--gray);
+  border: 1px dashed var(--gray-mid);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 9pt;
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+/* ── Chart wrapper ───────────────────────────────────────────── */
+.chart-wrap {
+  border: 1px solid var(--gray-mid);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 12px 0;
+  background: var(--white);
+  text-align: center;
+}
+.chart-wrap svg { max-width: 100%; height: auto; }
+
+/* ── Sensitivity table override ──────────────────────────────── */
+.sensitivity-table thead th { background: var(--blue); }
+.sensitivity-table td.center-cell {
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 700;
+}
+
+/* ── Management score bar ────────────────────────────────────── */
+.score-bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.score-bar-bg { flex: 1; height: 12px; background: var(--gray-mid); border-radius: 6px; overflow: hidden; }
+.score-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--navy)); border-radius: 6px; }
+.score-label { font-size: 8.5pt; min-width: 40px; text-align: right; font-weight: 700; color: var(--navy); }
+
+/* ── Disclaimer ──────────────────────────────────────────────── */
+.disclaimer {
+  border-top: 1px solid var(--gray-mid);
+  margin-top: 20px;
+  padding-top: 14px;
+  font-size: 7.5pt;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* ── Utilities ───────────────────────────────────────────────── */
+p { margin-bottom: 8px; }
+ul.plain { list-style: disc; padding-left: 20px; margin-bottom: 12px; }
+ul.plain li { margin-bottom: 4px; font-size: 9pt; }
+.bold { font-weight: 700; }
+.navy { color: var(--navy); }
+.mb0 { margin-bottom: 0; }
+.mt8 { margin-top: 8px; }
+.mt14 { margin-top: 14px; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.text-small { font-size: 8pt; }
+.text-light { color: var(--text-light); }
+</style>
+</head>
+<body>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# COVER PAGE                                                      #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="cover-page">
+  <div class="cover-top-bar">
+    <div class="cover-logo-placeholder">LOGO</div>
+    <div class="cover-firm-name">Báo cáo Định giá Doanh nghiệp</div>
+    <div class="cover-confidential">Bảo mật</div>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-tag">Báo cáo phân tích &amp; định giá</div>
+
+    {% if report.company_profile %}
+      <div class="cover-company-name">{{ report.company_profile.company_name }}</div>
+      <div class="cover-report-title">
+        {{ report.company_profile.industry }}
+        {% if report.company_profile.sub_industry %} – {{ report.company_profile.sub_industry }}{% endif %}
+      </div>
+    {% else %}
+      <div class="cover-company-name">Báo cáo Định giá</div>
+      <div class="cover-report-title">Phân tích &amp; Định giá Doanh nghiệp</div>
+    {% endif %}
+
+    <div class="cover-divider"></div>
+
+    <div class="cover-meta-grid">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Ngày báo cáo</div>
+        <div class="cover-meta-value">{{ report.generated_at[:10] }}</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Mã tham chiếu</div>
+        <div class="cover-meta-value">{{ report.job_id[:8] | upper }}</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Loại báo cáo</div>
+        <div class="cover-meta-value">Định giá toàn diện</div>
+      </div>
+    </div>
+
+    {% if report.valuation %}
+    <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:18px 32px;text-align:center;max-width:360px;width:100%;">
+      <div style="font-size:8pt;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Giá trị hợp lý ước tính</div>
+      <div style="font-size:22pt;font-weight:700;color:#fff;">{{ report.valuation.fair_value | fmt_currency }} tỷ</div>
+      <div style="font-size:9pt;color:rgba(168,218,220,0.9);margin-top:4px;">
+        {{ report.valuation.recommendation }}
+        &nbsp;|&nbsp;
+        {% if report.valuation.upside_downside_pct >= 0 %}
+        +{{ report.valuation.upside_downside_pct | round(1) }}% Upside
+        {% else %}
+        {{ report.valuation.upside_downside_pct | round(1) }}% Downside
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="cover-footer">
+    <span>Tài liệu này chỉ dành cho mục đích tham khảo nội bộ</span>
+    <span>Trang 1</span>
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# TABLE OF CONTENTS                                               #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="toc-page">
+  <div class="toc-title">Mục lục</div>
+  <div class="toc-subtitle">Báo cáo Phân tích &amp; Định giá Doanh nghiệp – 12 Chương</div>
+  <ul class="toc-list">
+    <li><span class="toc-num">1.</span><span class="toc-item-name">Tóm tắt điều hành (Executive Summary)</span></li>
+    <li><span class="toc-num">2.</span><span class="toc-item-name">Luận điểm đầu tư (Investment Thesis)</span></li>
+    <li><span class="toc-num">3.</span><span class="toc-item-name">Tổng quan doanh nghiệp (Business Overview)</span></li>
+    <li><span class="toc-num">4.</span><span class="toc-item-name">Phân tích thị trường (Market Analysis)</span></li>
+    <li><span class="toc-num">5.</span><span class="toc-item-name">Hoạt động kinh doanh (Business Operations)</span></li>
+    <li><span class="toc-num">6.</span><span class="toc-item-name">Phân tích tài chính (Financial Analysis)</span></li>
+    <li><span class="toc-num">7.</span><span class="toc-item-name">Chỉ số tài chính (Financial Ratios)</span></li>
+    <li><span class="toc-num">8.</span><span class="toc-item-name">Dự phóng tài chính (Projections)</span></li>
+    <li><span class="toc-num">9.</span><span class="toc-item-name">Định giá doanh nghiệp (Valuation)</span></li>
+    <li><span class="toc-num">10.</span><span class="toc-item-name">Phân tích nhạy cảm (Sensitivity Analysis)</span></li>
+    <li><span class="toc-num">11.</span><span class="toc-item-name">Kết luận &amp; Khuyến nghị</span></li>
+    <li><span class="toc-num">12.</span><span class="toc-item-name">Phụ lục (Appendix)</span></li>
+  </ul>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 1: EXECUTIVE SUMMARY                                    #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">Tóm tắt điều hành</div>
+  </div>
+  <div class="section-body">
+
+    {# Basic info cards #}
+    <div class="metric-grid metric-grid-4">
+      <div class="metric-card navy">
+        <div class="metric-label">Doanh nghiệp</div>
+        <div class="metric-value" style="font-size:11pt;">
+          {% if report.company_profile %}{{ report.company_profile.company_name }}{% else %}N/A{% endif %}
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Ngành</div>
+        <div class="metric-value" style="font-size:11pt;">
+          {% if report.company_profile %}{{ report.company_profile.industry }}{% else %}N/A{% endif %}
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Doanh thu gần nhất</div>
+        <div class="metric-value">
+          {% if report.financials and report.financials.years %}
+            {{ report.financials.years[-1].revenue | fmt_currency }}
+          {% else %}N/A{% endif %}
+        </div>
+        <div class="metric-unit">{{ report.financials.unit if report.financials else "" }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">EBITDA gần nhất</div>
+        <div class="metric-value">
+          {% if report.financials and report.financials.years %}
+            {{ report.financials.years[-1].ebitda | fmt_currency }}
+          {% else %}N/A{% endif %}
+        </div>
+        <div class="metric-unit">{{ report.financials.unit if report.financials else "" }}</div>
+      </div>
+    </div>
+
+    {# Valuation range #}
+    {% if report.valuation %}
+    <div class="subsection-title">Khoảng giá trị định giá</div>
+    <div class="val-range-bar">
+      <div class="val-range-item">
+        <div class="val-range-label">Thấp (Pessimistic)</div>
+        <div class="val-range-num low">{{ report.valuation.final_value_low | fmt_currency }} tỷ</div>
+      </div>
+      <div class="val-range-arrow">→</div>
+      <div class="val-range-item">
+        <div class="val-range-label">Cơ sở (Base Case)</div>
+        <div class="val-range-num mid">{{ report.valuation.final_value_mid | fmt_currency }} tỷ</div>
+      </div>
+      <div class="val-range-arrow">→</div>
+      <div class="val-range-item">
+        <div class="val-range-label">Cao (Optimistic)</div>
+        <div class="val-range-num high">{{ report.valuation.final_value_high | fmt_currency }} tỷ</div>
+      </div>
+    </div>
+
+    {# Recommendation #}
+    {% set rec_lower = report.valuation.recommendation | lower %}
+    {% set upside = report.valuation.upside_downside_pct %}
+    {% if upside >= 10 %}
+    <div class="rec-box positive">
+      <div class="rec-icon">▲</div>
+      <div class="rec-body">
+        <div class="rec-label">Khuyến nghị đầu tư</div>
+        <div class="rec-main">{{ report.valuation.recommendation }}</div>
+        <div class="rec-sub">
+          Giá trị hợp lý: <strong>{{ report.valuation.fair_value | fmt_currency }} tỷ đồng</strong>
+          &nbsp;|&nbsp;
+          Upside tiềm năng: <span class="upside-positive">+{{ upside | round(1) }}%</span>
+        </div>
+      </div>
+    </div>
+    {% elif upside <= -10 %}
+    <div class="rec-box negative">
+      <div class="rec-icon">▼</div>
+      <div class="rec-body">
+        <div class="rec-label">Khuyến nghị đầu tư</div>
+        <div class="rec-main">{{ report.valuation.recommendation }}</div>
+        <div class="rec-sub">
+          Giá trị hợp lý: <strong>{{ report.valuation.fair_value | fmt_currency }} tỷ đồng</strong>
+          &nbsp;|&nbsp;
+          Downside: <span class="upside-negative">{{ upside | round(1) }}%</span>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="rec-box neutral">
+      <div class="rec-icon">◆</div>
+      <div class="rec-body">
+        <div class="rec-label">Khuyến nghị đầu tư</div>
+        <div class="rec-main">{{ report.valuation.recommendation }}</div>
+        <div class="rec-sub">
+          Giá trị hợp lý: <strong>{{ report.valuation.fair_value | fmt_currency }} tỷ đồng</strong>
+          &nbsp;|&nbsp;
+          Biến động: <strong>{{ upside | round(1) }}%</strong>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Định giá.</div>
+    {% endif %}
+
+    {# Risk summary #}
+    {% if report.risks %}
+    <div class="subsection-title">Mức độ rủi ro tổng thể</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+      {% set rl = report.risks.overall_risk_level | lower %}
+      {% if rl == "high" %}<span class="badge-high">Cao</span>
+      {% elif rl == "low" %}<span class="badge-low">Thấp</span>
+      {% else %}<span class="badge-medium">Trung bình</span>{% endif %}
+      <span style="font-size:9pt;">{{ report.risks.key_risk_summary }}</span>
+    </div>
+    {% endif %}
+
+    {# Company description #}
+    {% if report.company_profile %}
+    <div class="subsection-title">Mô tả doanh nghiệp</div>
+    <p>{{ report.company_profile.description }}</p>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 2: INVESTMENT THESIS                                    #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">Luận điểm đầu tư</div>
+  </div>
+  <div class="section-body">
+
+    <div class="subsection-title">Các yếu tố tăng trưởng chính</div>
+    <ul class="driver-list">
+      {% if report.market_analysis %}
+      <li><span class="icon">📈</span><span>Thị trường tăng trưởng CAGR <strong>{{ report.market_analysis.industry_cagr | fmt_pct }}</strong> – giai đoạn {{ report.market_analysis.market_stage }}.</span></li>
+      {% endif %}
+      {% if report.financials %}
+      <li><span class="icon">💰</span><span>Doanh thu CAGR {{ report.financials.revenue_cagr | fmt_pct }}, Lợi nhuận CAGR {{ report.financials.profit_cagr | fmt_pct }} trong lịch sử hoạt động.</span></li>
+      {% endif %}
+      {% if report.business_ops %}
+      <li><span class="icon">⚙️</span><span>Biên EBITDA {{ report.business_ops.ebitda_margin | fmt_pct }} – nền tảng vận hành hiệu quả, tạo FCF ổn định.</span></li>
+      {% endif %}
+      {% if report.management %}
+      <li><span class="icon">👥</span><span>Ban lãnh đạo được đánh giá <strong>{{ report.management.management_score }}/10</strong> – {{ report.management.team_strength }}</span></li>
+      {% endif %}
+      {% if report.projections %}
+      <li><span class="icon">🎯</span><span>Dự phóng EBITDA CAGR {{ report.projections.ebitda_cagr | fmt_pct }} giai đoạn tới, hỗ trợ tạo giá trị dài hạn.</span></li>
+      {% endif %}
+      {% if not report.market_analysis and not report.financials and not report.business_ops %}
+      <li><span class="icon">ℹ️</span><span>Không đủ dữ liệu để xác định yếu tố tăng trưởng chi tiết.</span></li>
+      {% endif %}
+    </ul>
+
+    {# Key trends as catalysts #}
+    {% if report.market_analysis and report.market_analysis.key_trends %}
+    <div class="subsection-title">Chất xúc tác thị trường</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Xu hướng / Chất xúc tác</th>
+          <th>Tác động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trend in report.market_analysis.key_trends %}
+        <tr>
+          <td class="center">{{ loop.index }}</td>
+          <td>{{ trend }}</td>
+          <td><span class="badge-low">Tích cực</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# Risk summary table #}
+    {% if report.risks and report.risks.risks %}
+    <div class="subsection-title">Tóm tắt rủi ro chính</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Danh mục</th>
+          <th>Mô tả rủi ro</th>
+          <th class="center">Mức độ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for risk in report.risks.risks[:5] %}
+        <tr>
+          <td class="bold">{{ risk.category }}</td>
+          <td>{{ risk.description }}</td>
+          <td class="center">{{ risk.severity | severity_badge | safe }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần rủi ro tóm tắt.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 3: BUSINESS OVERVIEW                                    #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">Tổng quan doanh nghiệp</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.company_profile %}
+
+    {# 3.1 History & shareholders #}
+    <div class="subsection-title">3.1 Lịch sử &amp; Cơ cấu cổ đông</div>
+    <p>{{ report.company_profile.history }}</p>
+
+    <div class="metric-grid metric-grid-3" style="margin-top:12px;">
+      <div class="metric-card">
+        <div class="metric-label">Năm thành lập</div>
+        <div class="metric-value">{{ report.company_profile.founded_year if report.company_profile.founded_year else "N/A" }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Trụ sở</div>
+        <div class="metric-value" style="font-size:11pt;">{{ report.company_profile.headquarters }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Lĩnh vực chính</div>
+        <div class="metric-value" style="font-size:11pt;">{{ report.company_profile.sub_industry }}</div>
+      </div>
+    </div>
+
+    {# Shareholders table #}
+    {% if report.company_profile.shareholders %}
+    <div style="margin-top:14px;">
+      <strong style="font-size:9.5pt;color:var(--navy);">Cơ cấu cổ đông</strong>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>Cổ đông</th>
+            <th class="right">Tỷ lệ sở hữu (%)</th>
+            <th>Vai trò</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sh in report.company_profile.shareholders %}
+          <tr>
+            <td class="bold">{{ sh.name }}</td>
+            <td class="right">{{ sh.percentage | round(2) }}%</td>
+            <td>{{ sh.role if sh.role else "–" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {# Executives #}
+    {% if report.company_profile.executives %}
+    <div class="subsection-title" style="margin-top:18px;">Ban lãnh đạo chủ chốt</div>
+    <div class="exec-grid">
+      {% for exec in report.company_profile.executives %}
+      <div class="exec-card avoid-break">
+        <div class="exec-avatar">{{ exec.name[0] | upper }}</div>
+        <div>
+          <div class="exec-name">{{ exec.name }}</div>
+          <div class="exec-title">{{ exec.title }}</div>
+          <div class="exec-bg">{{ exec.background }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# 3.2 Business model #}
+    <div class="subsection-title">3.2 Mô hình kinh doanh &amp; Sản phẩm/Dịch vụ</div>
+    <p><strong>Mô hình doanh thu:</strong> {{ report.company_profile.revenue_model }}</p>
+
+    {% if report.company_profile.products_services %}
+    <p><strong>Danh mục sản phẩm/dịch vụ:</strong></p>
+    <ul class="plain">
+      {% for ps in report.company_profile.products_services %}
+      <li>{{ ps }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# Management info if available #}
+    {% if report.management %}
+    <div class="info-box" style="margin-top:10px;">
+      <strong>CEO: {{ report.management.ceo_name }}</strong> – {{ report.management.ceo_background }}
+      {% if report.management.ceo_achievements %}
+      <ul class="plain" style="margin-top:6px;margin-bottom:0;">
+        {% for ach in report.management.ceo_achievements %}
+        <li>{{ ach }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {# 3.3 Value chain #}
+    <div class="subsection-title">3.3 Chuỗi giá trị</div>
+    <div class="value-chain">
+      <div class="vc-box">
+        <div class="vc-label">Đầu vào</div>
+        <div class="vc-content">{{ report.company_profile.value_chain_input }}</div>
+      </div>
+      <div class="vc-box">
+        <div class="vc-label">Sản xuất</div>
+        <div class="vc-content">{{ report.company_profile.value_chain_production }}</div>
+      </div>
+      <div class="vc-box">
+        <div class="vc-label">Phân phối</div>
+        <div class="vc-content">{{ report.company_profile.value_chain_distribution }}</div>
+      </div>
+      <div class="vc-box">
+        <div class="vc-label">Khách hàng</div>
+        <div class="vc-content">{{ report.company_profile.value_chain_customer }}</div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Tổng quan doanh nghiệp.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 4: MARKET ANALYSIS                                      #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">Phân tích thị trường</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.market_analysis %}
+
+    {# TAM / SAM / SOM #}
+    <div class="tsm-grid">
+      <div class="tsm-card tam">
+        <div class="tsm-acronym">TAM</div>
+        <div class="tsm-full">Tổng quy mô thị trường</div>
+        <div class="tsm-value">{{ report.market_analysis.tam_value | fmt_currency }}</div>
+        <div class="tsm-unit">{{ report.market_analysis.market_size_unit }}</div>
+      </div>
+      <div class="tsm-card sam">
+        <div class="tsm-acronym">SAM</div>
+        <div class="tsm-full">Thị trường có thể tiếp cận</div>
+        <div class="tsm-value">{{ report.market_analysis.sam_value | fmt_currency }}</div>
+        <div class="tsm-unit">{{ report.market_analysis.market_size_unit }}</div>
+      </div>
+      <div class="tsm-card som">
+        <div class="tsm-acronym">SOM</div>
+        <div class="tsm-full">Thị phần có thể chiếm giữ</div>
+        <div class="tsm-value">{{ report.market_analysis.som_value | fmt_currency }}</div>
+        <div class="tsm-unit">{{ report.market_analysis.market_size_unit }}</div>
+      </div>
+    </div>
+
+    <div class="metric-grid metric-grid-3">
+      <div class="metric-card">
+        <div class="metric-label">CAGR ngành</div>
+        <div class="metric-value">{{ report.market_analysis.industry_cagr | fmt_pct }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Giai đoạn thị trường</div>
+        <div class="metric-value" style="font-size:11pt;">{{ report.market_analysis.market_stage }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Thị phần ước tính</div>
+        <div class="metric-value">
+          {% if report.market_analysis.market_share_estimate %}
+            {{ report.market_analysis.market_share_estimate | fmt_pct }}
+          {% else %}N/A{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Vị thế cạnh tranh</div>
+    <p>{{ report.market_analysis.market_position }}</p>
+
+    {# Key trends #}
+    {% if report.market_analysis.key_trends %}
+    <div class="subsection-title">Xu hướng thị trường</div>
+    <ul class="plain">
+      {% for trend in report.market_analysis.key_trends %}
+      <li>{{ trend }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# Competitors #}
+    {% if report.market_analysis.competitors %}
+    <div class="subsection-title">Phân tích đối thủ cạnh tranh</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Đối thủ</th>
+          <th class="right">Thị phần (%)</th>
+          <th>Điểm mạnh</th>
+          <th>Điểm yếu</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for comp in report.market_analysis.competitors %}
+        <tr>
+          <td class="bold">{{ comp.name }}</td>
+          <td class="right">
+            {% if comp.market_share %}{{ comp.market_share | round(1) }}%{% else %}N/A{% endif %}
+          </td>
+          <td>
+            {% if comp.strengths %}
+            <ul class="plain" style="margin:0;padding-left:14px;">
+              {% for s in comp.strengths %}<li>{{ s }}</li>{% endfor %}
+            </ul>
+            {% else %}–{% endif %}
+          </td>
+          <td>
+            {% if comp.weaknesses %}
+            <ul class="plain" style="margin:0;padding-left:14px;">
+              {% for w in comp.weaknesses %}<li>{{ w }}</li>{% endfor %}
+            </ul>
+            {% else %}–{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Thị trường.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 5: BUSINESS OPERATIONS                                  #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">Hoạt động kinh doanh</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.business_ops %}
+
+    {# Revenue breakdown #}
+    <div class="subsection-title">5.1 Cơ cấu doanh thu</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:14px;">
+
+      {# By product #}
+      <div>
+        <strong style="font-size:9pt;color:var(--navy);display:block;margin-bottom:6px;">Theo sản phẩm</strong>
+        {% if report.business_ops.revenue_by_product %}
+        <table>
+          <thead><tr><th>Sản phẩm</th><th class="right">%</th></tr></thead>
+          <tbody>
+            {% for seg in report.business_ops.revenue_by_product %}
+            <tr>
+              <td>{{ seg.name }}</td>
+              <td class="right bold">{{ seg.percentage | round(1) }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="na-box" style="font-size:8pt;">Không có dữ liệu</div>{% endif %}
+      </div>
+
+      {# By channel #}
+      <div>
+        <strong style="font-size:9pt;color:var(--navy);display:block;margin-bottom:6px;">Theo kênh phân phối</strong>
+        {% if report.business_ops.revenue_by_channel %}
+        <table>
+          <thead><tr><th>Kênh</th><th class="right">%</th></tr></thead>
+          <tbody>
+            {% for seg in report.business_ops.revenue_by_channel %}
+            <tr>
+              <td>{{ seg.name }}</td>
+              <td class="right bold">{{ seg.percentage | round(1) }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="na-box" style="font-size:8pt;">Không có dữ liệu</div>{% endif %}
+      </div>
+
+      {# By region #}
+      <div>
+        <strong style="font-size:9pt;color:var(--navy);display:block;margin-bottom:6px;">Theo vùng địa lý</strong>
+        {% if report.business_ops.revenue_by_region %}
+        <table>
+          <thead><tr><th>Khu vực</th><th class="right">%</th></tr></thead>
+          <tbody>
+            {% for seg in report.business_ops.revenue_by_region %}
+            <tr>
+              <td>{{ seg.name }}</td>
+              <td class="right bold">{{ seg.percentage | round(1) }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="na-box" style="font-size:8pt;">Không có dữ liệu</div>{% endif %}
+      </div>
+
+    </div>
+
+    {# Revenue pie chart #}
+    {% if charts.revenue_pie %}
+    <div class="chart-wrap avoid-break">{{ charts.revenue_pie | safe }}</div>
+    {% endif %}
+
+    {# Drivers #}
+    <div class="subsection-title">5.2 Động lực doanh thu</div>
+    <table>
+      <thead><tr><th>Yếu tố</th><th>Mô tả</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="bold" style="width:25%;">Khối lượng (Volume)</td>
+          <td>{{ report.business_ops.volume_driver }}</td>
+        </tr>
+        <tr>
+          <td class="bold">Giá bán (Price)</td>
+          <td>{{ report.business_ops.price_driver }}</td>
+        </tr>
+        <tr>
+          <td class="bold">Cơ cấu (Mix)</td>
+          <td>{{ report.business_ops.mix_driver }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {# Margin highlights #}
+    <div class="subsection-title">5.3 Biên lợi nhuận</div>
+    <div class="metric-grid metric-grid-2">
+      <div class="metric-card navy">
+        <div class="metric-label">Biên lợi nhuận gộp</div>
+        <div class="metric-value">{{ report.business_ops.gross_margin | fmt_pct }}</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-label">Biên EBITDA</div>
+        <div class="metric-value">{{ report.business_ops.ebitda_margin | fmt_pct }}</div>
+      </div>
+    </div>
+
+    {# Operational metrics #}
+    {% if report.business_ops.key_operational_metrics %}
+    <div class="subsection-title">5.4 Chỉ số vận hành chính</div>
+    <ul class="plain">
+      {% for metric in report.business_ops.key_operational_metrics %}
+      <li>{{ metric }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# Unit economics #}
+    {% if report.business_ops.unit_economics %}
+    <div class="subsection-title">5.5 Unit Economics</div>
+    <table>
+      <thead><tr><th>Chỉ tiêu</th><th class="right">Giá trị</th></tr></thead>
+      <tbody>
+        {% for key, val in report.business_ops.unit_economics.items() %}
+        <tr>
+          <td>{{ key }}</td>
+          <td class="right">{{ val }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Hoạt động kinh doanh.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 6: FINANCIAL ANALYSIS                                   #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">Phân tích tài chính</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.financials %}
+
+    <div class="info-box">
+      Đơn vị: <strong>{{ report.financials.unit }}</strong> | Tiền tệ: <strong>{{ report.financials.currency }}</strong>
+    </div>
+
+    {# Income statement #}
+    <div class="subsection-title">6.1 Kết quả kinh doanh</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Chỉ tiêu</th>
+          {% for y in report.financials.years %}
+          <th class="right">{{ y.year }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Doanh thu thuần</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.revenue | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Giá vốn hàng bán (COGS)</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.cogs | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">Lợi nhuận gộp</td>
+          {% for y in report.financials.years %}
+          <td class="right bold">{{ y.gross_profit | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td style="padding-left:20px;color:var(--text-light);">Biên lợi nhuận gộp</td>
+          {% for y in report.financials.years %}
+          <td class="right" style="color:var(--text-light);">{{ y.gross_margin | fmt_pct }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">EBITDA</td>
+          {% for y in report.financials.years %}
+          <td class="right bold">{{ y.ebitda | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td style="padding-left:20px;color:var(--text-light);">Biên EBITDA</td>
+          {% for y in report.financials.years %}
+          <td class="right" style="color:var(--text-light);">{{ y.ebitda_margin | fmt_pct }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>EBIT</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.ebit | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">Lợi nhuận sau thuế</td>
+          {% for y in report.financials.years %}
+          <td class="right bold">{{ y.net_income | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td style="padding-left:20px;color:var(--text-light);">Biên lợi nhuận ròng</td>
+          {% for y in report.financials.years %}
+          <td class="right" style="color:var(--text-light);">{{ y.net_margin | fmt_pct }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    {# Balance sheet highlights #}
+    <div class="subsection-title">6.2 Cân đối kế toán (tóm tắt)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Chỉ tiêu</th>
+          {% for y in report.financials.years %}
+          <th class="right">{{ y.year }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Tổng tài sản</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.total_assets | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Tổng nợ vay</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.total_debt | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">Vốn chủ sở hữu</td>
+          {% for y in report.financials.years %}
+          <td class="right bold">{{ y.equity | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    {# Cash flow #}
+    <div class="subsection-title">6.3 Dòng tiền</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Chỉ tiêu</th>
+          {% for y in report.financials.years %}
+          <th class="right">{{ y.year }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dòng tiền hoạt động (CFO)</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.cfo | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Chi đầu tư (CapEx)</td>
+          {% for y in report.financials.years %}
+          <td class="right">{{ y.capex | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">Dòng tiền tự do (FCF)</td>
+          {% for y in report.financials.years %}
+          <td class="right bold">{{ y.fcf | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    {# Chart #}
+    {% if charts.revenue_ebitda %}
+    <div class="chart-wrap avoid-break">{{ charts.revenue_ebitda | safe }}</div>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Tài chính.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 7: FINANCIAL RATIOS                                     #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">Chỉ số tài chính</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.financials %}
+
+    <div class="metric-grid metric-grid-3" style="margin-bottom:18px;">
+      <div class="metric-card navy">
+        <div class="metric-label">ROE</div>
+        <div class="metric-value">{{ report.financials.roe | fmt_pct }}</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-label">ROA</div>
+        <div class="metric-value">{{ report.financials.roa | fmt_pct }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Nợ / EBITDA</div>
+        <div class="metric-value">{{ report.financials.debt_to_ebitda | round(2) }}x</div>
+      </div>
+    </div>
+
+    <div class="metric-grid metric-grid-2">
+      <div class="metric-card">
+        <div class="metric-label">Doanh thu CAGR</div>
+        <div class="metric-value">{{ report.financials.revenue_cagr | fmt_pct }}</div>
+        <div class="metric-unit">Tăng trưởng kép hàng năm</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Lợi nhuận CAGR</div>
+        <div class="metric-value">{{ report.financials.profit_cagr | fmt_pct }}</div>
+        <div class="metric-unit">Tăng trưởng kép hàng năm</div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Bảng chỉ số tổng hợp</div>
+    <table>
+      <thead><tr><th>Chỉ số</th><th>Định nghĩa</th><th class="right">Giá trị</th><th>Đánh giá</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="bold">ROE</td>
+          <td>Lợi nhuận trên vốn chủ sở hữu</td>
+          <td class="right">{{ report.financials.roe | fmt_pct }}</td>
+          <td>{% if report.financials.roe >= 15 %}<span class="badge-low">Tốt</span>{% elif report.financials.roe >= 8 %}<span class="badge-medium">Trung bình</span>{% else %}<span class="badge-high">Thấp</span>{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="bold">ROA</td>
+          <td>Lợi nhuận trên tổng tài sản</td>
+          <td class="right">{{ report.financials.roa | fmt_pct }}</td>
+          <td>{% if report.financials.roa >= 8 %}<span class="badge-low">Tốt</span>{% elif report.financials.roa >= 3 %}<span class="badge-medium">Trung bình</span>{% else %}<span class="badge-high">Thấp</span>{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="bold">Nợ/EBITDA</td>
+          <td>Đòn bẩy tài chính</td>
+          <td class="right">{{ report.financials.debt_to_ebitda | round(2) }}x</td>
+          <td>{% if report.financials.debt_to_ebitda <= 2 %}<span class="badge-low">An toàn</span>{% elif report.financials.debt_to_ebitda <= 4 %}<span class="badge-medium">Trung bình</span>{% else %}<span class="badge-high">Cao</span>{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="bold">Doanh thu CAGR</td>
+          <td>Tăng trưởng doanh thu kép</td>
+          <td class="right">{{ report.financials.revenue_cagr | fmt_pct }}</td>
+          <td>{% if report.financials.revenue_cagr >= 15 %}<span class="badge-low">Cao</span>{% elif report.financials.revenue_cagr >= 5 %}<span class="badge-medium">Vừa</span>{% else %}<span class="badge-high">Thấp</span>{% endif %}</td>
+        </tr>
+        <tr>
+          <td class="bold">Lợi nhuận CAGR</td>
+          <td>Tăng trưởng lợi nhuận kép</td>
+          <td class="right">{{ report.financials.profit_cagr | fmt_pct }}</td>
+          <td>{% if report.financials.profit_cagr >= 15 %}<span class="badge-low">Cao</span>{% elif report.financials.profit_cagr >= 5 %}<span class="badge-medium">Vừa</span>{% else %}<span class="badge-high">Thấp</span>{% endif %}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {# Key observations #}
+    {% if report.financials.key_observations %}
+    <div class="subsection-title">Nhận xét chính</div>
+    <ul class="driver-list">
+      {% for obs in report.financials.key_observations %}
+      <li><span class="icon">▸</span><span>{{ obs }}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Chỉ số tài chính.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 8: PROJECTIONS                                          #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div class="section-title">Dự phóng tài chính</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.projections %}
+
+    <div class="metric-grid metric-grid-3" style="margin-bottom:16px;">
+      <div class="metric-card navy">
+        <div class="metric-label">Doanh thu CAGR (dự phóng)</div>
+        <div class="metric-value">{{ report.projections.revenue_cagr | fmt_pct }}</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-label">EBITDA CAGR (dự phóng)</div>
+        <div class="metric-value">{{ report.projections.ebitda_cagr | fmt_pct }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">EBITDA năm cuối</div>
+        <div class="metric-value">{{ report.projections.terminal_year_ebitda | fmt_currency }}</div>
+        <div class="metric-unit">tỷ đồng</div>
+      </div>
+    </div>
+
+    <div class="subsection-title">Bảng dự phóng (Base Case)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Chỉ tiêu</th>
+          {% for y in report.projections.base_case %}
+          <th class="right">{{ y.year }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">Doanh thu</td>
+          {% for y in report.projections.base_case %}
+          <td class="right bold">{{ y.revenue | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td style="padding-left:18px;color:var(--text-light);">Tăng trưởng</td>
+          {% for y in report.projections.base_case %}
+          <td class="right" style="color:var(--text-light);">{{ y.revenue_growth | fmt_pct }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">EBITDA</td>
+          {% for y in report.projections.base_case %}
+          <td class="right bold">{{ y.ebitda | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td style="padding-left:18px;color:var(--text-light);">Biên EBITDA</td>
+          {% for y in report.projections.base_case %}
+          <td class="right" style="color:var(--text-light);">{{ y.ebitda_margin | fmt_pct }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>CapEx</td>
+          {% for y in report.projections.base_case %}
+          <td class="right">{{ y.capex | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Thay đổi vốn lưu động</td>
+          {% for y in report.projections.base_case %}
+          <td class="right">{{ y.working_capital_change | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="bold">FCF</td>
+          {% for y in report.projections.base_case %}
+          <td class="right bold">{{ y.fcf | fmt_currency }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+
+    {# Chart #}
+    {% if charts.projection %}
+    <div class="chart-wrap avoid-break">{{ charts.projection | safe }}</div>
+    {% endif %}
+
+    {# Assumptions #}
+    {% if report.projections.key_assumptions %}
+    <div class="subsection-title">Giả định chính</div>
+    <ul class="driver-list">
+      {% for assumption in report.projections.key_assumptions %}
+      <li><span class="icon">✓</span><span>{{ assumption }}</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Dự phóng tài chính.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 9: VALUATION                                            #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <div class="section-title">Định giá doanh nghiệp</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.valuation %}
+
+    {# 9.1 DCF #}
+    <div class="subsection-title">9.1 Phương pháp chiết khấu dòng tiền (DCF)</div>
+    <div class="metric-grid metric-grid-4">
+      <div class="metric-card navy">
+        <div class="metric-label">WACC</div>
+        <div class="metric-value">{{ report.valuation.dcf.wacc | fmt_pct }}</div>
+      </div>
+      <div class="metric-card blue">
+        <div class="metric-label">Tăng trưởng dài hạn</div>
+        <div class="metric-value">{{ report.valuation.dcf.terminal_growth_rate | fmt_pct }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Giá trị doanh nghiệp (EV)</div>
+        <div class="metric-value">{{ report.valuation.dcf.enterprise_value | fmt_currency }}</div>
+        <div class="metric-unit">tỷ đồng</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Giá trị vốn chủ (Equity)</div>
+        <div class="metric-value">{{ report.valuation.dcf.equity_value | fmt_currency }}</div>
+        <div class="metric-unit">tỷ đồng</div>
+      </div>
+    </div>
+    <div class="info-box">
+      Nợ ròng (Net Debt): <strong>{{ report.valuation.dcf.net_debt | fmt_currency }} tỷ đồng</strong>
+      &nbsp;|&nbsp; Equity Value = EV – Net Debt
+    </div>
+
+    {# 9.2 Multiples #}
+    <div class="subsection-title">9.2 Phương pháp bội số thị trường (Multiples)</div>
+    <div class="metric-grid metric-grid-3">
+      <div class="metric-card">
+        <div class="metric-label">EV/EBITDA bội số áp dụng</div>
+        <div class="metric-value">{{ report.valuation.multiples.ev_ebitda_multiple | round(2) }}x</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">P/E bội số</div>
+        <div class="metric-value">
+          {% if report.valuation.multiples.pe_multiple %}{{ report.valuation.multiples.pe_multiple | round(2) }}x{% else %}N/A{% endif %}
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Trung vị ngành EV/EBITDA</div>
+        <div class="metric-value">{{ report.valuation.multiples.industry_median_multiple | round(2) }}x</div>
+      </div>
+    </div>
+    <div class="metric-grid metric-grid-2">
+      <div class="metric-card navy">
+        <div class="metric-label">EV ngụ ý từ EV/EBITDA</div>
+        <div class="metric-value">{{ report.valuation.multiples.implied_ev_from_ebitda | fmt_currency }}</div>
+        <div class="metric-unit">tỷ đồng</div>
+      </div>
+      {% if report.valuation.multiples.pb_multiple %}
+      <div class="metric-card">
+        <div class="metric-label">P/B bội số</div>
+        <div class="metric-value">{{ report.valuation.multiples.pb_multiple | round(2) }}x</div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if report.valuation.multiples.comparable_companies %}
+    <div class="note-box">
+      <strong>Công ty so sánh:</strong> {{ report.valuation.multiples.comparable_companies | join(", ") }}
+    </div>
+    {% endif %}
+
+    {# 9.3 Summary #}
+    <div class="subsection-title">9.3 Tổng hợp định giá</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Phương pháp</th>
+          <th class="right">Giá trị EV / Equity (tỷ đồng)</th>
+          <th class="right">Trọng số</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">DCF (Equity Value)</td>
+          <td class="right">{{ report.valuation.dcf.equity_value | fmt_currency }}</td>
+          <td class="right">50%</td>
+        </tr>
+        <tr>
+          <td class="bold">EV/EBITDA Multiples</td>
+          <td class="right">{{ report.valuation.multiples.implied_ev_from_ebitda | fmt_currency }}</td>
+          <td class="right">50%</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td class="bold">Khoảng định giá (Low – Mid – High)</td>
+          <td class="right bold" colspan="2">
+            {{ report.valuation.final_value_low | fmt_currency }} –
+            {{ report.valuation.final_value_mid | fmt_currency }} –
+            {{ report.valuation.final_value_high | fmt_currency }} tỷ
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    {# Valuation comparison chart #}
+    {% if charts.valuation_compare %}
+    <div class="chart-wrap avoid-break">{{ charts.valuation_compare | safe }}</div>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Định giá.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 10: SENSITIVITY ANALYSIS                                #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title">Phân tích nhạy cảm</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.valuation and report.valuation.sensitivity %}
+
+    <p>Ma trận nhạy cảm thể hiện sự thay đổi giá trị vốn chủ sở hữu (tỷ đồng) theo các tình huống kết hợp giữa WACC và tỷ lệ tăng trưởng dài hạn. Ô trung tâm (khung đậm) là kịch bản cơ sở.</p>
+
+    {# Sensitivity table #}
+    {% set sens = report.valuation.sensitivity %}
+    {% set mid_r = (sens.wacc_range | length) // 2 %}
+    {% set mid_c = (sens.growth_range | length) // 2 %}
+
+    <div class="subsection-title">Ma trận WACC × Tăng trưởng dài hạn</div>
+    <table class="sensitivity-table">
+      <thead>
+        <tr>
+          <th>WACC \ g</th>
+          {% for g in sens.growth_range %}
+          <th class="right">{{ g | fmt_pct }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r_idx in range(sens.wacc_range | length) %}
+        <tr>
+          <td class="bold">{{ sens.wacc_range[r_idx] | fmt_pct }}</td>
+          {% for c_idx in range(sens.growth_range | length) %}
+          <td class="right {% if r_idx == mid_r and c_idx == mid_c %}center-cell{% endif %}">
+            {{ sens.values[r_idx][c_idx] | fmt_currency }}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {# Sensitivity heatmap chart #}
+    {% if charts.sensitivity %}
+    <div class="chart-wrap avoid-break">{{ charts.sensitivity | safe }}</div>
+    {% endif %}
+
+    <div class="note-box">
+      Lưu ý: Ô màu tối (tâm bảng) là kịch bản cơ sở với WACC = {{ sens.wacc_range[mid_r] | fmt_pct }} và tỷ lệ tăng trưởng dài hạn = {{ sens.growth_range[mid_c] | fmt_pct }}.
+    </div>
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để phân tích phần Nhạy cảm.</div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 11: CONCLUSION & RECOMMENDATION                         #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div class="section-title">Kết luận &amp; Khuyến nghị</div>
+  </div>
+  <div class="section-body">
+
+    {% if report.valuation %}
+
+    {# Fair value big box #}
+    <div class="fair-value-box avoid-break">
+      <div class="fair-value-label">Giá trị hợp lý ước tính (Fair Value)</div>
+      <div class="fair-value-num">{{ report.valuation.fair_value | fmt_currency }}</div>
+      <div class="fair-value-unit">tỷ đồng</div>
+    </div>
+
+    {# Recommendation badge + upside #}
+    <div style="text-align:center;margin-bottom:22px;">
+      {% set rec = report.valuation.recommendation | upper %}
+      {% if "MUA" in rec or "BUY" in rec %}
+      <span class="badge-buy">{{ report.valuation.recommendation }}</span>
+      {% elif "BÁN" in rec or "SELL" in rec %}
+      <span class="badge-sell">{{ report.valuation.recommendation }}</span>
+      {% else %}
+      <span class="badge-hold">{{ report.valuation.recommendation }}</span>
+      {% endif %}
+      <div style="margin-top:12px;font-size:11pt;">
+        Upside/Downside tiềm năng:&nbsp;
+        {% if report.valuation.upside_downside_pct >= 0 %}
+        <span class="upside-positive">+{{ report.valuation.upside_downside_pct | round(1) }}%</span>
+        {% else %}
+        <span class="upside-negative">{{ report.valuation.upside_downside_pct | round(1) }}%</span>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Valuation range reminder #}
+    <div class="val-range-bar">
+      <div class="val-range-item">
+        <div class="val-range-label">Kịch bản thấp</div>
+        <div class="val-range-num low">{{ report.valuation.final_value_low | fmt_currency }} tỷ</div>
+      </div>
+      <div class="val-range-arrow">→</div>
+      <div class="val-range-item">
+        <div class="val-range-label">Cơ sở</div>
+        <div class="val-range-num mid">{{ report.valuation.final_value_mid | fmt_currency }} tỷ</div>
+      </div>
+      <div class="val-range-arrow">→</div>
+      <div class="val-range-item">
+        <div class="val-range-label">Kịch bản cao</div>
+        <div class="val-range-num high">{{ report.valuation.final_value_high | fmt_currency }} tỷ</div>
+      </div>
+    </div>
+
+    {# Deal structure #}
+    {% if report.valuation.deal_structure %}
+    <div class="subsection-title">Cấu trúc giao dịch đề xuất</div>
+    <div class="info-box">{{ report.valuation.deal_structure }}</div>
+    {% endif %}
+
+    {# Entry price #}
+    {% if report.valuation.entry_price_suggestion %}
+    <div class="subsection-title">Giá mua vào đề xuất</div>
+    <div class="metric-grid metric-grid-2">
+      <div class="metric-card blue">
+        <div class="metric-label">Giá mua vào đề xuất</div>
+        <div class="metric-value">{{ report.valuation.entry_price_suggestion | fmt_currency }}</div>
+        <div class="metric-unit">tỷ đồng</div>
+      </div>
+      <div class="metric-card navy">
+        <div class="metric-label">Fair Value / Entry Price</div>
+        <div class="metric-value">
+          {% if report.valuation.entry_price_suggestion > 0 %}
+            {{ (report.valuation.fair_value / report.valuation.entry_price_suggestion * 100) | round(1) }}%
+          {% else %}N/A{% endif %}
+        </div>
+        <div class="metric-unit">% của giá trị hợp lý</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="na-box">Không đủ dữ liệu để đưa ra Kết luận &amp; Khuyến nghị.</div>
+    {% endif %}
+
+    {# Risk summary in conclusion #}
+    {% if report.risks %}
+    <div class="subsection-title">Rủi ro cần lưu ý</div>
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:10px;padding:12px 14px;background:var(--gray);border-radius:6px;">
+      <div>
+        <strong>Mức độ rủi ro tổng thể:</strong>&nbsp;
+        {% set rl = report.risks.overall_risk_level | lower %}
+        {% if rl == "high" %}<span class="badge-high">Cao</span>
+        {% elif rl == "low" %}<span class="badge-low">Thấp</span>
+        {% else %}<span class="badge-medium">Trung bình</span>{% endif %}
+        <br/><br/>
+        {{ report.risks.key_risk_summary }}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# SECTION 12: APPENDIX                                            #}
+{# ═══════════════════════════════════════════════════════════════ #}
+<div class="section page-break-before">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div class="section-title">Phụ lục</div>
+  </div>
+  <div class="section-body">
+
+    {# 12.1 Key assumptions #}
+    {% if report.projections and report.projections.key_assumptions %}
+    <div class="subsection-title">12.1 Giả định chính dự phóng</div>
+    <table>
+      <thead><tr><th>#</th><th>Giả định</th></tr></thead>
+      <tbody>
+        {% for assumption in report.projections.key_assumptions %}
+        <tr>
+          <td class="center" style="width:36px;">{{ loop.index }}</td>
+          <td>{{ assumption }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# 12.2 Comparable companies #}
+    {% if report.valuation and report.valuation.multiples.comparable_companies %}
+    <div class="subsection-title">12.2 Danh sách công ty so sánh</div>
+    <table>
+      <thead><tr><th>#</th><th>Công ty so sánh</th></tr></thead>
+      <tbody>
+        {% for comp in report.valuation.multiples.comparable_companies %}
+        <tr>
+          <td class="center" style="width:36px;">{{ loop.index }}</td>
+          <td>{{ comp }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# 12.3 All risks #}
+    {% if report.risks and report.risks.risks %}
+    <div class="subsection-title">12.3 Chi tiết rủi ro</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Danh mục</th>
+          <th>Mô tả</th>
+          <th class="center">Mức độ</th>
+          <th>Biện pháp giảm thiểu</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for risk in report.risks.risks %}
+        <tr>
+          <td class="bold" style="white-space:nowrap;">{{ risk.category }}</td>
+          <td>{{ risk.description }}</td>
+          <td class="center">{{ risk.severity | severity_badge | safe }}</td>
+          <td>{{ risk.mitigation }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {# 12.4 Management risks #}
+    {% if report.management and report.management.key_risks_management %}
+    <div class="subsection-title">12.4 Rủi ro quản trị</div>
+    <ul class="plain">
+      {% for risk in report.management.key_risks_management %}
+      <li>{{ risk }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# 12.5 Financial observations #}
+    {% if report.financials and report.financials.key_observations %}
+    <div class="subsection-title">12.5 Nhận xét tài chính chi tiết</div>
+    <ul class="plain">
+      {% for obs in report.financials.key_observations %}
+      <li>{{ obs }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {# Disclaimer #}
+    <div class="disclaimer">
+      <strong>TUYÊN BỐ MIỄN TRÁCH NHIỆM</strong><br />
+      Báo cáo này được lập dựa trên thông tin thu thập từ các nguồn được coi là đáng tin cậy tại thời điểm phân tích. Các ước tính, dự phóng và quan điểm trong báo cáo này chỉ mang tính tham khảo và không cấu thành lời khuyên đầu tư chính thức. Giá trị thực tế có thể khác biệt đáng kể so với các ước tính được trình bày do những thay đổi về điều kiện thị trường, môi trường kinh tế vĩ mô và các yếu tố rủi ro cụ thể của doanh nghiệp. Người sử dụng báo cáo này phải tự chịu trách nhiệm về quyết định đầu tư của mình và nên tham khảo ý kiến chuyên gia tư vấn độc lập trước khi thực hiện bất kỳ giao dịch nào.
+      <br /><br />
+      Báo cáo được tạo tự động bởi hệ thống AI phân tích định giá doanh nghiệp. Mã tham chiếu: <strong>{{ report.job_id }}</strong> | Ngày tạo: <strong>{{ report.generated_at[:19] }}</strong>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
