@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/valuai",
     )
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_db_driver(cls, v: str) -> str:
+        """Railway injects postgresql:// — ensure asyncpg driver is used."""
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
     # Redis / Celery
     REDIS_URL: str = Field(default="redis://localhost:6379/0")
