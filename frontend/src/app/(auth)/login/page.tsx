@@ -4,8 +4,10 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase";
+import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function LoginForm() {
   const router = useRouter();
@@ -24,21 +26,20 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const supabase = createBrowserClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      const resp = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (authError) {
-        setError(
-          authError.message === "Invalid login credentials"
-            ? "Email hoặc mật khẩu không đúng."
-            : authError.message
-        );
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        setError((body as { detail?: string }).detail || "Email hoặc mật khẩu không đúng.");
         return;
       }
 
+      const { access_token } = await resp.json() as { access_token: string };
+      setToken(access_token);
       router.push(redirectTo);
       router.refresh();
     } catch {
@@ -54,10 +55,7 @@ function LoginForm() {
         <h1 className="text-2xl font-bold text-navy-800">Đăng nhập</h1>
         <p className="mt-2 text-sm text-navy-500">
           Chưa có tài khoản?{" "}
-          <Link
-            href="/register"
-            className="font-medium text-brand-blue hover:underline"
-          >
+          <Link href="/register" className="font-medium text-brand-blue hover:underline">
             Đăng ký miễn phí
           </Link>
         </p>
@@ -71,9 +69,7 @@ function LoginForm() {
         )}
 
         <div>
-          <label htmlFor="email" className="label-base">
-            Email
-          </label>
+          <label htmlFor="email" className="label-base">Email</label>
           <input
             id="email"
             type="email"
@@ -89,15 +85,7 @@ function LoginForm() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="password" className="label-base mb-0">
-              Mật khẩu
-            </label>
-            <Link
-              href="/forgot-password"
-              className="text-xs text-brand-blue hover:underline"
-            >
-              Quên mật khẩu?
-            </Link>
+            <label htmlFor="password" className="label-base mb-0">Mật khẩu</label>
           </div>
           <div className="relative">
             <input
@@ -117,22 +105,12 @@ function LoginForm() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-600"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          loading={loading}
-          className="w-full"
-        >
+        <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full">
           <LogIn className="h-4 w-4" />
           Đăng nhập
         </Button>

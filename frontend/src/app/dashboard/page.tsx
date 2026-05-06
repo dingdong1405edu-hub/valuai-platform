@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { Plus, FileText, BarChart3 } from "lucide-react";
-import { createServerClient } from "@/lib/supabase-server";
 import type { Report } from "@/lib/types";
 import { DashboardActions } from "./DashboardActions";
 import { ReportCardClient } from "./ReportCard";
@@ -11,10 +11,10 @@ export const dynamic = "force-dynamic";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-async function fetchReports(accessToken: string): Promise<Report[]> {
+async function fetchReports(token: string): Promise<Report[]> {
   try {
     const res = await fetch(`${API_BASE}/api/reports`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -25,21 +25,20 @@ async function fetchReports(accessToken: string): Promise<Report[]> {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createServerClient();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("valuai_token")?.value;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (!token) redirect("/login");
 
-  if (!user) redirect("/login");
+  // Verify token is valid
+  const meResp = await fetch(`${API_BASE}/api/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!meResp.ok) redirect("/login");
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const reports = session?.access_token
-    ? await fetchReports(session.access_token)
-    : [];
+  const user = await meResp.json() as { id: string; email: string; full_name: string };
+  const reports = await fetchReports(token);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -62,16 +61,11 @@ export default async function DashboardPage() {
       </nav>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        {/* Page header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-navy-800">
-              Báo cáo của tôi
-            </h1>
+            <h1 className="text-2xl font-bold text-navy-800">Báo cáo của tôi</h1>
             <p className="mt-1 text-sm text-navy-500">
-              {reports.length > 0
-                ? `${reports.length} báo cáo`
-                : "Chưa có báo cáo nào"}
+              {reports.length > 0 ? `${reports.length} báo cáo` : "Chưa có báo cáo nào"}
             </p>
           </div>
           <Link
@@ -83,19 +77,15 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {/* Empty state */}
         {reports.length === 0 ? (
           <div className="card flex flex-col items-center justify-center gap-5 py-20 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-navy-100">
               <FileText className="h-10 w-10 text-navy-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-navy-700">
-                Chưa có báo cáo nào
-              </h2>
+              <h2 className="text-lg font-semibold text-navy-700">Chưa có báo cáo nào</h2>
               <p className="mt-1 text-sm text-navy-400 max-w-sm">
-                Bắt đầu bằng cách tải lên tài liệu doanh nghiệp để nhận báo
-                cáo định giá AI.
+                Bắt đầu bằng cách tải lên tài liệu doanh nghiệp để nhận báo cáo định giá AI.
               </p>
             </div>
             <Link

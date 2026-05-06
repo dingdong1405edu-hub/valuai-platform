@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, UserPlus, CheckCircle2 } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase";
+import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function RegisterPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +19,6 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const validate = (): string | null => {
     if (!fullName.trim()) return "Vui lòng nhập họ tên.";
@@ -37,21 +40,33 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const supabase = createBrowserClient();
-      const { error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: { full_name: fullName.trim() },
-        },
+      const resp = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password, full_name: fullName.trim() }),
       });
 
-      if (authError) {
-        setError(authError.message);
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        setError((body as { detail?: string }).detail || "Đã có lỗi xảy ra.");
         return;
       }
 
-      setSuccess(true);
+      // Auto-login after register
+      const loginResp = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+
+      if (loginResp.ok) {
+        const { access_token } = await loginResp.json() as { access_token: string };
+        setToken(access_token);
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        router.push("/login");
+      }
     } catch {
       setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
@@ -59,42 +74,13 @@ export default function RegisterPage() {
     }
   };
 
-  if (success) {
-    return (
-      <div className="text-center space-y-4">
-        <div className="flex justify-center">
-          <CheckCircle2 className="h-16 w-16 text-green-500" />
-        </div>
-        <h1 className="text-2xl font-bold text-navy-800">
-          Xác nhận email của bạn
-        </h1>
-        <p className="text-navy-500">
-          Chúng tôi đã gửi email xác nhận tới{" "}
-          <span className="font-medium text-navy-700">{email}</span>.
-          <br />
-          Vui lòng kiểm tra hộp thư và nhấn vào liên kết để kích hoạt tài
-          khoản.
-        </p>
-        <p className="text-sm text-navy-400">
-          Đã có tài khoản?{" "}
-          <Link href="/login" className="text-brand-blue hover:underline font-medium">
-            Đăng nhập
-          </Link>
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-navy-800">Tạo tài khoản</h1>
         <p className="mt-2 text-sm text-navy-500">
           Đã có tài khoản?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-brand-blue hover:underline"
-          >
+          <Link href="/login" className="font-medium text-brand-blue hover:underline">
             Đăng nhập
           </Link>
         </p>
@@ -108,9 +94,7 @@ export default function RegisterPage() {
         )}
 
         <div>
-          <label htmlFor="fullName" className="label-base">
-            Họ và tên
-          </label>
+          <label htmlFor="fullName" className="label-base">Họ và tên</label>
           <input
             id="fullName"
             type="text"
@@ -125,9 +109,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="label-base">
-            Email
-          </label>
+          <label htmlFor="email" className="label-base">Email</label>
           <input
             id="email"
             type="email"
@@ -142,9 +124,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="label-base">
-            Mật khẩu
-          </label>
+          <label htmlFor="password" className="label-base">Mật khẩu</label>
           <div className="relative">
             <input
               id="password"
@@ -163,19 +143,13 @@ export default function RegisterPage() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-600"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="label-base">
-            Xác nhận mật khẩu
-          </label>
+          <label htmlFor="confirmPassword" className="label-base">Xác nhận mật khẩu</label>
           <div className="relative">
             <input
               id="confirmPassword"
@@ -194,36 +168,21 @@ export default function RegisterPage() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-600"
               aria-label={showConfirm ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
-              {showConfirm ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          loading={loading}
-          className="w-full"
-        >
+        <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full">
           <UserPlus className="h-4 w-4" />
           Tạo tài khoản
         </Button>
 
         <p className="text-center text-xs text-navy-400">
           Bằng cách đăng ký, bạn đồng ý với{" "}
-          <Link href="/terms" className="text-brand-blue hover:underline">
-            Điều khoản dịch vụ
-          </Link>{" "}
+          <Link href="/terms" className="text-brand-blue hover:underline">Điều khoản dịch vụ</Link>{" "}
           và{" "}
-          <Link href="/privacy" className="text-brand-blue hover:underline">
-            Chính sách bảo mật
-          </Link>
-          .
+          <Link href="/privacy" className="text-brand-blue hover:underline">Chính sách bảo mật</Link>.
         </p>
       </form>
     </div>

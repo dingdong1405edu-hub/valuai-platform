@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase";
+import { clearToken } from "@/lib/auth";
 
 export function DashboardActions() {
   const router = useRouter();
 
-  const handleSignOut = async () => {
-    const supabase = createBrowserClient();
-    await supabase.auth.signOut();
+  const handleSignOut = () => {
+    clearToken();
     router.push("/login");
     router.refresh();
   };

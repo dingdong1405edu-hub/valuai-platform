@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@/lib/supabase";
+import { getToken } from "@/lib/auth";
 import type {
   JobStatusResponse,
   Report,
@@ -18,26 +18,18 @@ class ApiError extends Error {
   }
 }
 
-async function getAccessToken(): Promise<string | null> {
-  const supabase = createBrowserClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
-}
-
 async function fetchWithAuth(
   path: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const token = await getAccessToken();
+  const token = getToken();
 
-  const headers: HeadersInit = {
-    ...(options.headers ?? {}),
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> ?? {}),
   };
 
   if (token) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE}${path}`, {
@@ -60,9 +52,6 @@ async function fetchWithAuth(
 }
 
 export const api = {
-  /**
-   * Upload documents and create a new valuation job.
-   */
   async uploadDocuments(
     files: UploadedFile[],
     companyName: string
@@ -83,33 +72,21 @@ export const api = {
     return response.json() as Promise<{ report_id: string; job_id: string }>;
   },
 
-  /**
-   * Fetch all reports for the authenticated user.
-   */
   async getReports(): Promise<Report[]> {
     const response = await fetchWithAuth("/api/reports");
     return response.json() as Promise<Report[]>;
   },
 
-  /**
-   * Fetch a single report by ID.
-   */
   async getReport(reportId: string): Promise<Report> {
     const response = await fetchWithAuth(`/api/reports/${reportId}`);
     return response.json() as Promise<Report>;
   },
 
-  /**
-   * Poll the status of a running job.
-   */
   async getJobStatus(jobId: string): Promise<JobStatusResponse> {
     const response = await fetchWithAuth(`/api/jobs/${jobId}/status`);
     return response.json() as Promise<JobStatusResponse>;
   },
 
-  /**
-   * Delete a report by ID.
-   */
   async deleteReport(reportId: string): Promise<void> {
     await fetchWithAuth(`/api/reports/${reportId}`, { method: "DELETE" });
   },
